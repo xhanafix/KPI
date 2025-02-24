@@ -962,26 +962,53 @@
             }
         }
 
+        function calculateWeeklyTarget(monthlyTarget) {
+            // Convert monthly target to weekly (monthly target divided by 4)
+            return Math.round(monthlyTarget / 4);
+        }
+
         function updateTargets() {
             const viewType = document.getElementById('viewType').value;
             const periodValue = document.getElementById('period').value;
             
             const targetCells = document.querySelectorAll('#targetTable tbody tr');
             
+            // Define base monthly targets for each metric
+            const baseTargets = {
+                'Fresh Leads': 60,
+                'Appointments': 6,
+                'Design Fee Sign-ups': 3,
+                'Deposit Contracts': 3,
+                'Progress Claims': 3,
+                'Project Handovers': 3
+            };
+
             targetCells.forEach(row => {
-                const baseTarget = parseInt(row.querySelector('.actual-input').dataset.basetarget || 
-                                          row.querySelector('.actual-input').dataset.target);
+                const metricName = row.querySelector('td:first-child').textContent;
+                const baseTarget = baseTargets[metricName];
                 let adjustedTarget = baseTarget;
 
+                // Adjust target based on view type
                 if (viewType === 'week') {
                     adjustedTarget = calculateWeeklyTarget(baseTarget);
                 } else if (viewType === 'year') {
-                    adjustedTarget = baseTarget * 12;
+                    adjustedTarget = baseTarget * 12; // Multiply monthly target by 12 for yearly
                 }
+                // Monthly view uses base target (no adjustment needed)
 
+                // Update the target display and dataset
                 row.querySelector('td:nth-child(2)').textContent = adjustedTarget;
-                row.querySelector('.actual-input').dataset.target = adjustedTarget;
+                const actualInput = row.querySelector('.actual-input');
+                actualInput.dataset.target = adjustedTarget;
+                
+                // Recalculate gap if there's a value
+                if (actualInput.value) {
+                    calculateGap(actualInput);
+                }
             });
+
+            // Update dashboard to reflect new targets
+            updateDashboard();
         }
 
         function updatePeriodOptions() {
